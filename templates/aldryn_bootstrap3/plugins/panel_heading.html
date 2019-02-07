@@ -1,9 +1,6 @@
 {% load cms_tags %}
 
-<div class="panel-heading
-    {% if instance.classes %} {{ instance.classes }}{% endif %}"
-    {{ instance.attributes_str }}>
-
+<div class="panel-heading{% if instance.classes %} {{ instance.classes }}{% endif %}">
     {% if instance.title %}
         <h3 class="panel-title">{{ instance.title }}</h3>
     {% endif %}

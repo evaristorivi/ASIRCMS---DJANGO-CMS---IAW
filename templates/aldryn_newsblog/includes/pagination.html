@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% if is_paginated %}
-    <ul>
+    <ul class="pagination">
         {% if page_obj.has_previous %}
             <li>
                 <a href="?page={{ page_obj.previous_page_number }}">

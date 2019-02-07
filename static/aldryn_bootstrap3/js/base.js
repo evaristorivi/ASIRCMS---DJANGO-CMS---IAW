@@ -6,105 +6,6 @@
 // ALDRYN-BOOTSTRAP3
 (function ($) {
     'use strict';
-    var staticUrl = '/static/';
-
-    try {
-        staticUrl = window.top.CMS.config.urls.static;
-    } catch (e) {}
-
-    var originalSelect = $.fn.iconpicker.Constructor.prototype.select;
-
-    // so if you want to use an iconset that uses modern svg inlining,
-    // you have to provide your own custom iconset similar to this:
-    // {
-    //     "svg": true,
-    //     "spritePath": "sprites/icons.svg",
-    //     "iconClass": "svg-icon",
-    //     "iconClassFix": "svg-icon-",
-    //     "icons": [
-    //         ...
-    //     ]
-    // }
-    $.fn.iconpicker.Constructor.prototype.select = function(icon) {
-        if (!this.options.svg) {
-            return originalSelect.call(this, icon);
-        }
-
-        var op = this.options;
-        var el = this.$element;
-        op.selected = $.inArray(icon.replace(op.iconClassFix, ''), op.icons);
-        if (op.selected === -1) {
-            op.selected = 0;
-            icon = op.iconClassFix + op.icons[op.selected];
-        }
-        if (icon !== '' && op.selected >= 0) {
-            op.icon = icon;
-            if (op.inline === false) {
-                var v = op.icons[op.selected];
-                el.find('input').val(icon);
-                el
-                    .find('i')
-                    .attr('class', '')
-                    .html(
-                        '<i data-svg="true" class="' + op.iconClass + ' ' + op.iconClassFix + v + '">' +
-                            '<span class="aldryn-bootstrap3-svg-icon ' + op.iconClass + ' ' + op.iconClassFix + v + '">' +
-                                (op.spritePath ? (
-                                '<svg role="presentation">' +
-                                '<use xlink:href="' + staticUrl + op.spritePath + '#' + v + '"></use></svg>' ) : '') +
-                            '</span>' +
-                        '</i>'
-                    );
-            }
-            if (icon === op.iconClassFix) {
-                el.trigger({ type: 'change', icon: 'empty' });
-            } else {
-                el.trigger({ type: 'change', icon: icon });
-            }
-            op.table.find('button.' + op.selectedClass).removeClass(op.selectedClass);
-        }
-    };
-
-    var originalUpdateIcons = $.fn.iconpicker.Constructor.prototype.updateIcons;
-
-    $.fn.iconpicker.Constructor.prototype.updateIcons = function(page) {
-        if (!this.options.svg) {
-            return originalUpdateIcons.call(this, page);
-        }
-        var op = this.options;
-        var tbody = op.table.find('tbody').empty();
-        var offset = (page - 1) * this.totalIconsPerPage();
-        var length = op.rows;
-        if (op.rows === 0) {
-            length = op.icons.length;
-        }
-        for (var i = 0; i < length; i++) {
-            var tr = $('<tr></tr>');
-            for (var j = 0; j < op.cols; j++) {
-                var pos = offset + i * op.cols + j;
-                var btn = $('<button class="btn ' + op.unselectedClass + ' btn-icon"></button>').hide();
-                if (pos < op.icons.length) {
-                    var v = op.icons[pos];
-                    btn
-                        .val(v)
-                        .attr('title', v)
-                        .append(
-                            '<span class="aldryn-bootstrap3-svg-icon ' + op.iconClass + ' ' + op.iconClassFix + v + '">' +
-                                (op.spritePath ? (
-                                '<svg role="presentation">' +
-                                '<use xlink:href="' + staticUrl + op.spritePath + '#' + v + '"></use></svg>' ) : '') +
-                            '</span>'
-                        )
-                        .show();
-                    if (op.icon === v) {
-                        btn.addClass(op.selectedClass).addClass('btn-icon-selected');
-                    }
-                }
-                tr.append($('<td></td>').append(btn));
-            }
-            tbody.append(tr);
-        }
-    };
-
 
     // shorthand for jQuery(document).ready();
     $(function () {
@@ -183,12 +84,6 @@
                 var initialValue = iconPickerButton.data('icon');
                 var initialIconset = iconSet.find('option[data-prefix=' + data.iconset + ']').attr('value');
 
-                try {
-                    // in case custom iconset is used
-                    initialIconset = JSON.parse(initialIconset);
-                } catch (e) {
-                }
-
                 // initialize bootstrap iconpicker functionality
                 iconPickerButton.iconpicker({
                     arrowClass: 'btn-default',
@@ -207,13 +102,7 @@
 
                 // set correct iconset when switching the font via dropdown
                 iconSet.on('change', function () {
-                    var iconset = $(this).val();
-
-                    try {
-                        iconset = JSON.parse(iconset);
-                    } catch (e) {}
-
-                    iconPickerButton.iconpicker('setIconset', iconset);
+                    iconPickerButton.iconpicker('setIconset', $(this).val());
                 });
 
                 // checkbox is shown if field is not required, switches visibility
@@ -252,7 +141,7 @@
                 var sizeContext = $('.field-btn_size');
                 var btnContext = $('.field-btn_context');
                 var colorContext = $('.field-txt_context');
-                var blockContext = $('.field-btn_block:not(.field-icon_left)');
+                var blockContext = $('.field-btn_block');
                 var iconContext = $('.js-icon-picker button');
 
                 // attach event to the label
@@ -310,31 +199,12 @@
                 // handle icon picker
                 iconContext.on('change', function () {
                     var el = $(this);
-                    var innermostElement = el.find('i:last');
-                    var iconClass = innermostElement.attr('class');
-                    var isIconSVG = !!innermostElement.data('svg');
-
-                    var previewIcon;
                     if (el.attr('name') === 'icon_left') {
                         // icon left alignment
-                        previewIcon = previewBtn.find('.pre').attr('class', 'pre ' + iconClass);
+                        previewBtn.find('.pre').attr('class', 'pre ' + el.find('i').attr('class'));
                     } else {
                         // icon right alignment
-                        previewIcon = previewBtn.find('.post').attr('class', 'post ' + iconClass);
-                    }
-
-                    if (isIconSVG) {
-                        var op = el.data('bs.iconpicker').options;
-
-                        previewIcon.html(
-                            '<span class="aldryn-bootstrap3-svg-icon ' + op.iconClass + ' ' + op.iconClassFix + op.icon + '">' +
-                                (op.spritePath ? (
-                                '<svg role="presentation">' +
-                                '<use xlink:href="' + staticUrl + op.spritePath + '#' + op.icon + '"></use></svg>' ) : '') +
-                            '</span>'
-                        );
-                    } else {
-                        previewIcon.html('');
+                        previewBtn.find('.post').attr('class', 'post ' + el.find('i').attr('class'));
                     }
                 }).trigger('change');
 
@@ -345,15 +215,14 @@
                     } else {
                         previewBtn.find('.pre').hide();
                     }
-                }).trigger('change');
-
+                });
                 $('#id_icon_right').on('change', function () {
                     if ($(this).is(':checked')) {
                         previewBtn.find('.post').show();
                     } else {
                         previewBtn.find('.post').hide();
                     }
-                }).trigger('change');
+                });
 
                 // certain elements can only be loaded after a timeout
                 setTimeout(function () {
@@ -477,193 +346,6 @@
                     });
 
                 });
-            },
-
-            /**
-             * Widget used in aldryn_bootstrap3/widgets/responsive.html and
-             * aldryn_bootstrap3/widgets/responsive_print.html.
-             * Allows to show or hide certain elements depending on the
-             * viewport size.
-             *
-             * @method responsiveWidget
-             * @param {jQuery} element context element to render
-             */
-            responsiveWidget: function responsiveWidget(element) {
-                var currentChoice = [];
-                var inputElement = element.find('textarea');
-                var choiceElements = element.find('.js-responsive-choice');
-                var configElement = element.find('.js-responsive-config');
-                var configElementDropdown = element.find('.js-responsive-config-dropdown');
-                var value = inputElement.val();
-
-                // remove block and inline additions
-                function getCleanCSS(string) {
-                    var tmp = string.split(' ');
-
-                    tmp.forEach(function (item, index) {
-                        tmp[index] = tmp[index].replace('-block', '');
-                        tmp[index] = tmp[index].replace('-inline', '');
-                    });
-
-                    return tmp;
-                }
-
-                // get the different states, up to four
-                function getChoice() {
-                    // tmpChoices represent the active states of:
-                    // ------------------------
-                    // XS | SM | MD | LG | Type
-                    // x    x    x    x    choice (0 = off, 1 = on)
-                    // visible-xs | visible-sm | visible-md | visible-lg
-                    var tmpChoices = [0, 0, 0, 0];
-                    var tmp = inputElement.val();
-
-                    tmp = getCleanCSS(tmp);
-
-                    // loop through items
-                    tmp.forEach(function (item) {
-                        switch (item) {
-                            case 'visible-xs':
-                                tmpChoices[0] = 1;
-                                break;
-                            case 'visible-sm':
-                                tmpChoices[1] = 1;
-                                break;
-                            case 'visible-md':
-                                tmpChoices[2] = 1;
-                                break;
-                            case 'visible-lg':
-                                tmpChoices[3] = 1;
-                                break;
-                            case 'visible-print':
-                                tmpChoices[0] = 1;
-                                break;
-                            default:
-                                break;
-                        }
-                    });
-
-                    return tmpChoices;
-                }
-
-                // get the dropdown config
-                function getConfig() {
-                    var tmpConfig = 0;
-                    var tmpCls = inputElement.val().split(' ');
-                    var tmpVal = tmpCls[0].split('-');
-
-                    if (tmpVal.length === 3) {
-                        switch (tmpVal[2]) {
-                            case 'block':
-                                tmpConfig = 1;
-                                break;
-                            case 'inline':
-                                tmpConfig = 2;
-                                break;
-                            default:
-                                break;
-                        }
-                    // if its longer then 4 it's inline-block
-                    } else if (tmpVal.length === 4) {
-                        tmpConfig = 3;
-                    }
-
-                    return tmpConfig;
-                }
-
-                // general update function for the UI
-                function update(choices, config) {
-                    var cls = [];
-                    currentChoice = choices;
-
-                    choices.forEach(function (choice, index) {
-                        if (choice) {
-                            var tmp = choiceElements.eq(index).data('cls');
-
-                            // in case of print don't store undefined values
-                            if (tmp === undefined) {
-                                return;
-                            }
-
-                            switch(config) {
-                                case 1:
-                                    tmp = tmp + '-block';
-                                    break;
-                                case 2:
-                                    tmp = tmp + '-inline';
-                                    break;
-                                case 3:
-                                    tmp = tmp + '-inline-block';
-                                    break;
-                                default:
-                                    break;
-                            }
-                            cls.push(tmp);
-                        }
-                    });
-
-                    inputElement.val(cls.join(' '));
-
-                    updateConfig(choices, config);
-                }
-
-                // config update function for the UI
-                function updateConfig(choices, config) {
-                    // update settings
-                    var els = configElementDropdown.find('li');
-
-                    // update choices
-                    choices.forEach(function (choice, index) {
-                        // reset the element
-                        choiceElements.eq(index)
-                            .removeClass('btn-default')
-                            .removeClass('btn-danger')
-                            .removeClass('btn-success')
-                            .find('.js-on, .js-off').addClass('hidden')
-                        if (choice) {
-                            choiceElements.eq(index)
-                                .addClass('btn-success')
-                                .find('.js-on').removeClass('hidden');
-                        } else {
-                            choiceElements.eq(index)
-                                .addClass('btn-danger')
-                                .find('.js-off').removeClass('hidden');
-                        }
-                    });
-
-                    // update dropdown
-                    els.removeClass('active').eq(config).addClass('active');
-                    configElement.find('.text').text(els.eq(config).text());
-                }
-
-                // attach event handler to size buttons
-                choiceElements.on('click', function (e) {
-                    e.preventDefault();
-
-                    var choiceIndex = choiceElements.index(this);
-                    var configIndex = configElementDropdown.find('li')
-                        .index(configElementDropdown.find('li.active'));
-
-                    if (currentChoice[choiceIndex] >= 1) {
-                        currentChoice[choiceIndex] = 0;
-                    } else {
-                        currentChoice[choiceIndex] = 1;
-                    }
-
-                    update(currentChoice, configIndex)
-                });
-
-                // attach event handler to config button
-                configElementDropdown.find('a').on('click', function(e) {
-                    e.preventDefault();
-
-                    var configIndex = configElementDropdown.find('a').index(this);
-
-                    update(currentChoice, configIndex);
-                });
-
-                // set initial state from current values
-                update(getChoice(), getConfig());
             },
 
             /**
@@ -793,6 +475,25 @@
                         .replace(' ', '');
                     return cls;
                 }
+            },
+
+            imagePlugin: function imagePlugin() {
+                var useOriginalImageCheckbox = $('#id_use_original_image');
+                var fieldsToToggle = $([
+                    '.field-aspect_ratio',
+                    '.field-shape',
+                    '.field-thumbnail',
+                    '.field-override_width',
+                    '.field-override_height'
+                ].join(', '));
+
+                useOriginalImageCheckbox.on('change', function () {
+                    if (this.checked) {
+                        fieldsToToggle.hide();
+                    } else {
+                        fieldsToToggle.show();
+                    }
+                }).trigger('change');
             }
         };
 
@@ -815,17 +516,16 @@
                 bootstrap3.sizeWidget($(this));
             });
         }
-        if ($('.js-aldryn-bootstrap3-responsive').length) {
-            $('.js-aldryn-bootstrap3-responsive').each(function () {
-                bootstrap3.responsiveWidget($(this));
-            });
-        }
         // auto initialize plugins
         if ($('.aldryn-bootstrap3-grid').length) {
             bootstrap3.rowColumnPlugin();
         }
         if ($('.aldryn-bootstrap3-label').length) {
             bootstrap3.labelPlugin();
+        }
+
+        if ($('.model-boostrap3imageplugin').length) {
+            bootstrap3.imagePlugin();
         }
     });
 })(window.jQuery || django.jQuery);

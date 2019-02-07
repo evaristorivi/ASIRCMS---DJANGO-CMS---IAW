@@ -1,8 +1,37 @@
 {% extends "aldryn_newsblog/base.html" %}
-{% load i18n cms_tags apphooks_config_tags %}
+{% load i18n staticfiles thumbnail cms_tags apphooks_config_tags %}
 
 {% block title %}
     {{ article.title }} - {{ block.super }}
+{% endblock %}
+
+{% block header %}
+    <!-- Set your background image for this header on the line below. -->
+    <header class="intro-header" style="background-image: url(
+        {% if article.featured_image_id %}
+            {% thumbnail article.featured_image 1200x400 crop subject_location=article.featured_image.subject_location %}
+        {% else %}
+            {% static 'img/post-bg.jpg' %}
+        {% endif %}
+        )">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>{% render_model article "title" "" "" "striptags" %}</h1>
+                        <h2 class="subheading">{% render_model article "lead_in" "" "" "striptags" %}</h2>
+                        <span class="meta">
+                            Posted by
+                            <a href="{% namespace_url 'article-detail' article.slug namespace=namespace default='' %}">
+                                {{ article.author.name }}
+                            </a>
+                            on {{ article.publishing_date|date:"F n, Y" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 {% endblock %}
 
 {% block newsblog_content %}
@@ -10,7 +39,7 @@
 
     {% static_placeholder "newsblog_social" %}
 
-    <ul>
+    <ul class="pager">
         {% if prev_article %}
             <li><a href="{{ prev_article.get_absolute_url }}">{% trans "Previous Article" %}</a></li>
         {% endif %}

@@ -2,8 +2,7 @@
 
 <div class="well
     {% if instance.size %} well-{{ instance.size }}{% endif %}
-    {% if instance.classes %} {{ instance.classes }}{% endif %}"
-    {{ instance.attributes_str }}>
+    {% if instance.classes %} {{ instance.classes }}{% endif %}">
 
     {% for plugin in instance.child_plugin_instances %}
         {% render_plugin plugin %}
