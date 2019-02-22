@@ -30,6 +30,7 @@ aldryn_addons.settings.load(locals())
 INSTALLED_APPS.extend([
     # add your project specific apps here
      'django_extensions',
+     'crearusuarios',
 ])
 
 
@@ -52,3 +53,5 @@ AUTH_LDAP_GROUP_SEARCH = LDAPSearch("ou=people,dc=planetexpress,dc=com",
 )
 AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 AUTH_LDAP_MIRROR_GROUPS = True
+
+
