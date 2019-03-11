@@ -13,17 +13,24 @@ from django.utils.translation import activate
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
 # Create your models here.
+#mediante user_logged_in, indicamos con @receiver(user_logged_in) que cuando se produzca un login de un usuario se ejecuta el código a continuación.
+#Comprueba que el usuario no sea administrador, porque si no ocurriría un error al acceder como administrdor.
 @receiver(user_logged_in)
 def creausuario(sender,user,request,**kwargs):
 		if user.is_superuser == False:
+      #Activar idioma
 			activate('en')
+      #Lista de permisos
 			permisos=['Can add boostrap3 panel body plugin','Can change boostrap3 panel body plugin','Can add boostrap3 panel plugin','Can change boostrap3 panel plugin','Can add article','Can change article','Can delete article','Can add cms plugin','Can change cms plugin','Can delete cms plugin','Can add placeholder','Can change placeholder','Can delete placeholder','Can use Structure mode','Can add placeholder reference','Can change placeholder reference','Can add content type','Can change content type','Can delete content type']
-			usuario=User.objects.get(username=user.username)
+			#Al usuario que se está registrando se le añaden los permisos, y se guarda
+      usuario=User.objects.get(username=user.username)
 			for p in permisos:
 				per=Permission.objects.get(name=str(p))
 				usuario.user_permissions.add(per)
 			usuario.save()
-			try:
+		  #Crearmos la Userpage, el blog para el usuario y la página del usuario, luego
+      #asignaremos permisos y finalmente publicaremos la página.
+      try:
 				Page.objects.get(created_by=usuario)
 			except Page.DoesNotExist:
 				#Crear UserPage
