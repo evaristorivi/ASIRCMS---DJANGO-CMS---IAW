@@ -11,16 +11,22 @@ from django.utils.translation import activate
 
 
 class Command(BaseCommand):
-	
+	#Indicar el nombre de usuario como argumento
 	def add_arguments(self, parser):
 		parser.add_argument('user',type=str)
 		 
 	def handle(self, *args, **options):
+    #Activar idioma
 		activate('en')
-		user=options['user']
-		permisos=['Can add boostrap3 panel body plugin','Can change boostrap3 panel body plugin','Can add boostrap3 panel plugin','Can change boostrap3 panel plugin','Can add article','Can change article','Can delete article','Can add cms plugin','Can change cms plugin','Can delete cms plugin','Can add placeholder','Can change placeholder','Can delete placeholder','Can use Structure mode','Can add placeholder reference','Can change placeholder reference','Can add content type','Can change content type','Can delete content type']
+		#Recuperar el parámetro guardándolo en la variables user
+    user=options['user']
+		#Lista de permisos
+    permisos=['Can add boostrap3 panel body plugin','Can change boostrap3 panel body plugin','Can add boostrap3 panel plugin','Can change boostrap3 panel plugin','Can add article','Can change article','Can delete article','Can add cms plugin','Can change cms plugin','Can delete cms plugin','Can add placeholder','Can change placeholder','Can delete placeholder','Can use Structure mode','Can add placeholder reference','Can change placeholder reference','Can add content type','Can change content type','Can delete content type']
 		usuario=LDAPBackend().populate_user(user)
-		if usuario is None:
+		#Si el usuairo no existe en LDAP asignaremos permisos y si no existe la página del usuario crearmos la Userpage, el blog para el usuario y la página del usuario, luego
+    #asignaremos permisos y finalmente publicaremos la página.
+    #si ya existe la página del usuario entonces mostramos un mensaje informativo.
+    if usuario is None:
 			self.stdout.write(self.style.SUCCESS('No existe ese usuario en LDAP.'))
 		
 		else:
